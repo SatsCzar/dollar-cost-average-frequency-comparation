@@ -4,12 +4,34 @@ from calendar import monthrange
 import matplotlib.pyplot as plt
 
 
+def buyBtc(btcPrice, amount):
+    return amount / btcPrice
+
 def compareDCAFrequencies():
     """
     5 years
     12 months
     US$ 200 by month
     """
+    
+    def getBtcPrice(year, month, day):
+        startSearch = pd.to_datetime(f'{year}-{month}-{day} 09:00:00')
+        endSearch = pd.to_datetime(f'{year}-{month}-{day} 23:00:00')
+
+        filtered = btcPriceHistory[(btcPriceHistory['date'] >= startSearch) &
+                                   (btcPriceHistory['date'] <= endSearch)]
+
+        try:
+            return filtered.iloc[0]['close']
+        except:
+            startSearch = pd.to_datetime(
+                f'{year}-{month}-{day-1} 00:00:00')
+            endSearch = pd.to_datetime(
+                f'{year}-{month}-{day} 23:00:00')
+
+            filtered = btcPriceHistory[(btcPriceHistory['date'] >= startSearch) &
+                                       (btcPriceHistory['date'] <= endSearch)]
+            return filtered.iloc[0]['close']
 
     btcPriceHistory = pd.read_csv("BTC_1h.csv", parse_dates=False)
     btcPriceHistory['date'] = pd.to_datetime(btcPriceHistory['date'])
@@ -32,29 +54,7 @@ def compareDCAFrequencies():
 
         for month in months:
 
-            def getBtcPrice(year, month, day):
-                startSearch = pd.to_datetime(f'{year}-{month}-{day} 09:00:00')
-                endSearch = pd.to_datetime(f'{year}-{month}-{day} 23:00:00')
-
-                filtered = btcPriceHistory[(btcPriceHistory['date'] >= startSearch) &
-                                    (btcPriceHistory['date'] <= endSearch)]
-
-                try:
-                    return filtered.iloc[0]['close']
-                except:
-                    startSearch = pd.to_datetime(
-                        f'{year}-{month}-{day-1} 00:00:00')
-                    endSearch = pd.to_datetime(
-                        f'{year}-{month}-{day} 23:00:00')
-
-                    filtered = btcPriceHistory[(btcPriceHistory['date'] >= startSearch) &
-                                        (btcPriceHistory['date'] <= endSearch)]
-                    return filtered.iloc[0]['close']
-
             _, days = monthrange(year, month)
-
-            def buyBtc(btcPrice, amount):
-                return amount / btcPrice
 
             compraDiaria = monthlyBuy / days
 
@@ -77,5 +77,6 @@ def compareDCAFrequencies():
     print(f'BTC every month: {round(bitcoinEveryMonthAccumulator, 8)}')
     print(f'Difference: {round(bitcoinEveryMonthAccumulator - bitcoinEveryDayAccumulator, 8)}',
           f'or {round(((bitcoinEveryMonthAccumulator / bitcoinEveryDayAccumulator)-1)*100)}%')
+
 
 compareDCAFrequencies()
